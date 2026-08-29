@@ -1,0 +1,11 @@
+{
+  "name": "parkinson-voice-companion",
+  "version": "1.0.0",
+  "description": "Parkinson's Voice Companion - Voice-based screening, monitoring, and therapy companion",
+  "scripts": {
+    "dev:backend": "python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "node scripts/start_dev.js",
+    "build": "npm --prefix frontend run build"
+  }
+}

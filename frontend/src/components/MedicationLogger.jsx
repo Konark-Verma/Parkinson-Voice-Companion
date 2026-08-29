@@ -106,20 +106,29 @@ export default function MedicationLogger({ patientId, onLogSaved }) {
               </div>
 
               {/* 1-Tap Action Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 <button
                   onClick={() => handleLogIntake(med, 'TAKEN')}
                   disabled={loggingId === med.id}
-                  className="flex-1 sm:flex-initial px-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold text-sm sm:text-base shadow-md shadow-emerald-600/30 flex items-center justify-center space-x-2 transition min-h-[48px]"
+                  className="flex-1 sm:flex-initial px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/30 flex items-center justify-center space-x-1.5 transition min-h-[44px]"
                 >
-                  <Check className="w-5 h-5 stroke-[2.5]" />
-                  <span>{loggingId === med.id ? 'Logging...' : 'Take Now'}</span>
+                  <Check className="w-4 h-4 stroke-[2.5]" />
+                  <span>{loggingId === med.id ? 'Logging...' : 'Taken'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleLogIntake(med, 'SKIPPED')}
+                  disabled={loggingId === med.id}
+                  className="px-3 py-3 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-xl font-semibold text-xs sm:text-sm transition min-h-[44px]"
+                  title="Mark as Skipped"
+                >
+                  Skipped
                 </button>
 
                 <button
                   onClick={() => handleLogIntake(med, 'DELAYED')}
                   disabled={loggingId === med.id}
-                  className="px-3.5 py-3.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold text-xs sm:text-sm transition min-h-[48px]"
+                  className="px-3 py-3 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-xl font-semibold text-xs sm:text-sm transition min-h-[44px]"
                   title="Mark as Delayed"
                 >
                   Delayed

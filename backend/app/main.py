@@ -85,6 +85,7 @@ app.include_router(alerts_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
 
 @app.get("/health")
+@app.get("/api/health")
 async def health_check():
     return {
         "status": "HEALTHY",

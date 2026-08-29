@@ -118,6 +118,11 @@ async def list_patient_medications(
     """
     if current_user.role == "PATIENT" and current_user.patient_id != patient_id:
         raise HTTPException(status_code=403, detail="Access denied")
+    if current_user.role == "CAREGIVER":
+        p_res = await db.execute(select(Patient).where(Patient.id == patient_id))
+        pat = p_res.scalar_one_or_none()
+        if not pat or pat.caregiver_id != current_user.caregiver_id:
+            raise HTTPException(status_code=403, detail="You are not linked as caregiver for this patient")
 
     stmt = select(Medication).where(Medication.patient_id == patient_id).order_by(desc(Medication.created_at))
     res = await db.execute(stmt)
@@ -140,6 +145,7 @@ async def list_patient_medications(
     ]
 
 @router.post("/log", response_model=MedicationLogResponse)
+@router.post("/medication-logs", response_model=MedicationLogResponse)
 async def log_medication_intake(
     log_in: MedicationLogCreate,
     current_user: TokenData = Depends(get_current_user),
@@ -220,6 +226,11 @@ async def list_medication_logs(
 ):
     if current_user.role == "PATIENT" and current_user.patient_id != patient_id:
         raise HTTPException(status_code=403, detail="Access denied")
+    if current_user.role == "CAREGIVER":
+        p_res = await db.execute(select(Patient).where(Patient.id == patient_id))
+        pat = p_res.scalar_one_or_none()
+        if not pat or pat.caregiver_id != current_user.caregiver_id:
+            raise HTTPException(status_code=403, detail="You are not linked as caregiver for this patient")
 
     stmt = (
         select(MedicationLog, Medication.name)

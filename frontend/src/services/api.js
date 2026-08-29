@@ -16,10 +16,18 @@ async function request(endpoint, options = {}) {
     headers['Content-Type'] = 'application/json';
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (netErr) {
+    const error = new Error("Can't reach server — check your connection");
+    error.isNetworkError = true;
+    error.originalError = netErr;
+    throw error;
+  }
 
   if (!response.ok) {
     let errorDetail = 'API Request Failed';
@@ -27,7 +35,10 @@ async function request(endpoint, options = {}) {
       const errJson = await response.json();
       errorDetail = errJson.detail || errJson.message || JSON.stringify(errJson);
     } catch (_) {}
-    throw new Error(errorDetail);
+    const error = new Error(errorDetail);
+    error.isNetworkError = false;
+    error.status = response.status;
+    throw error;
   }
 
   return response.json();
@@ -57,6 +68,10 @@ export const api = {
 
   async getPatient(id) {
     return request(`/patients/${id}`);
+  },
+
+  async getCaregiverStatus(patientId) {
+    return request(`/patients/${patientId}/caregiver-status`);
   },
 
   // Voice Samples & ML Classification

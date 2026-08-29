@@ -85,14 +85,19 @@ export default function VoiceRecorder({ patientId, onSampleClassified }) {
     setRecording(false);
   };
 
+  const [errorState, setErrorState] = useState(null); // { isNetwork: boolean, message: string }
+
   const uploadAndClassify = async (blob) => {
     setProcessing(true);
     setErrorMessage(null);
+    setErrorState(null);
 
     try {
       const resp = await api.uploadVoiceSample(blob, patientId, taskType);
       if (!resp.success) {
-        setErrorMessage(resp.message || 'Audio sample failed quality check. Please re-record.');
+        const msg = resp.message || 'Audio sample failed quality check. Please re-record.';
+        setErrorMessage(msg);
+        setErrorState({ isNetwork: false, message: msg });
         setResult(null);
       } else {
         setResult(resp);
@@ -101,7 +106,12 @@ export default function VoiceRecorder({ patientId, onSampleClassified }) {
         }
       }
     } catch (err) {
-      setErrorMessage(err.message || 'Classification service temporarily unavailable.');
+      const isNet = err.isNetworkError || err.message?.includes("Can't reach server") || err.message?.includes('fetch');
+      const msg = isNet
+        ? "The backend server (http://127.0.0.1:8000) is unreachable. Please verify the backend service is running."
+        : (err.message || 'Classification service temporarily unavailable.');
+      setErrorMessage(msg);
+      setErrorState({ isNetwork: isNet, message: msg });
     } finally {
       setProcessing(false);
     }
@@ -278,19 +288,33 @@ export default function VoiceRecorder({ patientId, onSampleClassified }) {
         </button>
       </div>
 
-      {/* Rejection / Quality Error Prompt */}
+      {/* Rejection / Connection Error Prompt */}
       {errorMessage && (
-        <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start space-x-3 text-red-800">
-          <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+        <div className={`mt-6 rounded-xl p-4 flex items-start space-x-3 border ${
+          errorState?.isNetwork
+            ? 'bg-amber-50 border-amber-300 text-amber-900'
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <AlertTriangle className={`w-6 h-6 flex-shrink-0 mt-0.5 ${
+            errorState?.isNetwork ? 'text-amber-600' : 'text-red-600'
+          }`} />
           <div className="flex-1">
-            <h3 className="text-sm font-bold text-red-900">Audio Quality Check Failed</h3>
+            <h3 className={`text-sm font-bold ${
+              errorState?.isNetwork ? 'text-amber-950' : 'text-red-900'
+            }`}>
+              {errorState?.isNetwork ? "Can't reach server — check your connection" : "Audio Quality Check Failed"}
+            </h3>
             <p className="text-xs sm:text-sm mt-0.5 leading-relaxed">{errorMessage}</p>
             <button
               onClick={startRecording}
-              className="mt-3 inline-flex items-center space-x-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+              className={`mt-3 inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition text-white ${
+                errorState?.isNetwork
+                  ? 'bg-amber-700 hover:bg-amber-800'
+                  : 'bg-red-600 hover:bg-red-700'
+              }`}
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Try Again</span>
+              <span>{errorState?.isNetwork ? 'Retry Connection' : 'Try Again'}</span>
             </button>
           </div>
         </div>
