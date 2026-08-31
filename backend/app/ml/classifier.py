@@ -19,7 +19,7 @@ class ParkinsonVoiceClassifier:
         self.model = None
         self.scaler = None
         self.feature_names = []
-        self.model_version = "rf-gb-v1.0.0-oxford"
+        self.model_version = "rf-gb-svm-v2.0.0-multidataset"
 
         self._ensure_loaded()
 
@@ -61,7 +61,8 @@ class ParkinsonVoiceClassifier:
             row_dict[feat] = [float(val)]
 
         df_input = pd.DataFrame(row_dict)
-        X_scaled = self.scaler.transform(df_input)
+        X_scaled_arr = self.scaler.transform(df_input)
+        X_scaled = pd.DataFrame(X_scaled_arr, columns=df_input.columns)
 
         # Soft probability prediction: [P(healthy), P(PD_risk)]
         probabilities = self.model.predict_proba(X_scaled)[0]

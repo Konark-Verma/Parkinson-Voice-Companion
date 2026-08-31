@@ -1,17 +1,70 @@
 {
-  "model_type": "Ensemble (RandomForest + GradientBoosting)",
-  "dataset_name": "Oxford Parkinson's Disease Voice Dataset (UCI)",
-  "total_samples": 195,
-  "pd_positive_samples": 147,
-  "healthy_control_samples": 48,
-  "cv_5fold_accuracy_mean": 0.8923,
-  "cv_5fold_accuracy_std": 0.0192,
-  "cv_5fold_roc_auc_mean": 0.9612,
-  "train_accuracy": 1.0,
-  "train_precision": 1.0,
-  "train_recall": 1.0,
-  "train_f1": 1.0,
-  "train_roc_auc": 1.0,
+  "model_type": "Ensemble (RandomForest + GradientBoosting + SVM, soft voting)",
+  "model_version": "rf-gb-svm-v2.0.0-multidataset",
+  "training_date": "2026-08-31",
+  "datasets": {
+    "oxford_uci_174": {
+      "name": "Oxford Parkinson's Disease Detection Dataset",
+      "citation": "Little et al., IEEE Trans. Biomed. Eng., 2008",
+      "samples": 195,
+      "features": 22
+    },
+    "telemonitoring_uci_189": {
+      "name": "Parkinson's Disease Telemonitoring Dataset",
+      "citation": "Tsanas et al., IEEE Trans. Biomed. Eng., 2010",
+      "samples": 2946,
+      "label_derivation": "total_UPDRS binarized: Q75+ = 1 (high burden), Q25- = 0 (low burden)"
+    }
+  },
+  "total_samples": 3141,
+  "pd_positive_samples": 1619,
+  "healthy_control_samples": 1522,
+  "cv_5fold_accuracy_mean": 0.8109,
+  "cv_5fold_accuracy_std": 0.0064,
+  "cv_5fold_roc_auc_mean": 0.8853,
+  "cv_5fold_roc_auc_std": 0.0015,
+  "cv_5fold_f1_mean": 0.8229,
+  "cv_5fold_precision_mean": 0.7955,
+  "cv_5fold_recall_mean": 0.8524,
+  "train_accuracy": 0.8755,
+  "train_precision": 0.8525,
+  "train_recall": 0.9172,
+  "train_f1": 0.8837,
+  "train_roc_auc": 0.9487,
+  "per_dataset_eval": {
+    "oxford_accuracy": 1.0,
+    "oxford_auc": 1.0,
+    "oxford_f1": 1.0,
+    "oxford_samples": 195,
+    "telemonitoring_accuracy": 0.8673,
+    "telemonitoring_auc": 0.9428,
+    "telemonitoring_f1": 0.8725,
+    "telemonitoring_samples": 2946
+  },
+  "feature_importances": {
+    "DFA": 0.23678,
+    "HNR": 0.1087,
+    "PPE": 0.07622,
+    "MDVP:Jitter(Abs)": 0.07105,
+    "NHR": 0.04491,
+    "RPDE": 0.04253,
+    "MDVP:APQ": 0.04098,
+    "Shimmer:DDA": 0.03778,
+    "Shimmer:APQ3": 0.0359,
+    "MDVP:PPQ": 0.03502,
+    "MDVP:Jitter(%)": 0.03459,
+    "MDVP:Shimmer": 0.03363,
+    "Shimmer:APQ5": 0.03342,
+    "Jitter:DDP": 0.03101,
+    "MDVP:RAP": 0.03057,
+    "MDVP:Shimmer(dB)": 0.02396,
+    "spread1": 0.02217,
+    "spread2": 0.01639,
+    "D2": 0.01258,
+    "MDVP:Fo(Hz)": 0.01094,
+    "MDVP:Fhi(Hz)": 0.01074,
+    "MDVP:Flo(Hz)": 0.01012
+  },
   "features": [
     "MDVP:Fo(Hz)",
     "MDVP:Fhi(Hz)",
@@ -36,5 +89,5 @@
     "D2",
     "PPE"
   ],
-  "note": "Acoustic biomarkers are experimental indicators. Classification thresholds are unvalidated research approximations."
+  "disclaimer": "Acoustic biomarkers are experimental research indicators. Classification thresholds are unvalidated approximations and must not be interpreted as clinical Parkinson's disease diagnoses."
 }

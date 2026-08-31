@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Database & Storage
+*.db
+*.sqlite
+backend/data/*.db
+backend/data/uploads/*.wav
+
+# ML dataset cache files (downloaded automatically by train_classifier.py if needed)
+backend/app/ml/models/*.csv
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.DS_Store
+
+# Testing / Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
