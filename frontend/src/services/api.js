@@ -68,6 +68,20 @@ export const api = {
     return data;
   },
 
+  async sendOTP(email, username) {
+    return request('/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, username }),
+    });
+  },
+
+  async verifyOTP(email, otp_code) {
+    return request('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp_code }),
+    });
+  },
+
   async getMe() {
     return request('/auth/me');
   },

@@ -15,6 +15,13 @@ SECRET_KEY = os.getenv("SECRET_KEY", "parkinson-voice-companion-super-secret-key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days for prototype convenience
 
+# Gmail SMTP Configuration for Email Authentication & Verification
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "e.admin26@gmail.com")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "haucmgimtppmdnwz")
+SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "e.admin26@gmail.com")
+
 # Clinical Disclaimer text required on relevant outputs
 CLINICAL_SAFETY_DISCLAIMER = (
     "DISCLAIMER: Parkinson's Voice Companion is an experimental screening/monitoring support "

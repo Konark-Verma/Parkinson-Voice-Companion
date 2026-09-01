@@ -13,6 +13,19 @@ class UserRegister(BaseModel):
     full_name: str
     email: str
     role: str = "PATIENT"
+    otp_code: Optional[str] = None
+
+class SendOTPRequest(BaseModel):
+    email: str
+    username: Optional[str] = "User"
+
+class VerifyOTPRequest(BaseModel):
+    email: str
+    otp_code: str
+
+class OTPResponse(BaseModel):
+    success: bool
+    message: str
 
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

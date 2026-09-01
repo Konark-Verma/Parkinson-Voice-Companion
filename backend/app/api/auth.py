@@ -5,9 +5,85 @@ from sqlalchemy import select
 from backend.app.core.database import get_db
 from backend.app.core.security import verify_password, get_password_hash, create_access_token, get_current_user, TokenData
 from backend.app.models.models import User, Patient, Doctor, Caregiver
-from backend.app.schemas.schemas import UserLogin, UserRegister, UserResponse, TokenResponse
+import random
+import time
+from backend.app.schemas.schemas import (
+    UserLogin, UserRegister, UserResponse, TokenResponse,
+    SendOTPRequest, VerifyOTPRequest, OTPResponse
+)
+from backend.app.services.email_service import send_otp_email
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+# In-memory OTP storage: email -> { "code": "123456", "expires_at": timestamp }
+ACTIVE_OTPS = {}
+
+@router.post("/send-otp", response_model=OTPResponse)
+async def send_otp(req: SendOTPRequest):
+    email_clean = req.email.strip().lower()
+    if not email_clean or "@" not in email_clean:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email address format."
+        )
+
+    # Generate 6-digit random numeric code
+    code = f"{random.randint(100000, 999999)}"
+    expires_at = time.time() + 600  # 10 minutes
+
+    ACTIVE_OTPS[email_clean] = {
+        "code": code,
+        "expires_at": expires_at
+    }
+
+    # Dispatch email asynchronously via Gmail SMTP
+    sent = await send_otp_email(
+        recipient_email=email_clean,
+        otp_code=code,
+        username=req.username or "User"
+    )
+
+    if not sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send verification email via Gmail SMTP. Please check credentials or try again."
+        )
+
+    return OTPResponse(
+        success=True,
+        message=f"Verification code sent to {email_clean}. Please check your email inbox."
+    )
+
+@router.post("/verify-otp", response_model=OTPResponse)
+async def verify_otp(req: VerifyOTPRequest):
+    email_clean = req.email.strip().lower()
+    record = ACTIVE_OTPS.get(email_clean)
+
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No verification code was sent to this email. Please click 'Send OTP' first."
+        )
+
+    if time.time() > record["expires_at"]:
+        ACTIVE_OTPS.pop(email_clean, None)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification code has expired (10 min limit). Please request a new code."
+        )
+
+    if record["code"] != req.otp_code.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification code. Please check your email and try again."
+        )
+
+    # Valid OTP -> clear record
+    ACTIVE_OTPS.pop(email_clean, None)
+    return OTPResponse(
+        success=True,
+        message="Email successfully verified via SMTP OTP!"
+    )
 
 @router.post("/register", response_model=TokenResponse)
 async def register(req: UserRegister, db: AsyncSession = Depends(get_db)):
