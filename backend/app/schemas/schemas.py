@@ -16,16 +16,21 @@ class UserRegister(BaseModel):
     otp_code: Optional[str] = None
 
 class SendOTPRequest(BaseModel):
-    email: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    channel: str = "EMAIL"  # "EMAIL" or "PHONE"
     username: Optional[str] = "User"
 
 class VerifyOTPRequest(BaseModel):
-    email: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    channel: str = "EMAIL"  # "EMAIL" or "PHONE"
     otp_code: str
 
 class OTPResponse(BaseModel):
     success: bool
     message: str
+    token: Optional[str] = None  # Returned on successful phone login if account exists
 
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

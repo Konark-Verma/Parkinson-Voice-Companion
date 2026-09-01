@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import {
   Activity, ShieldCheck, Stethoscope, HeartHandshake, User,
-  Lock, Mail, UserPlus, LogIn, Sparkles, ArrowRight, ShieldAlert,
-  CheckCircle2, Send, RefreshCw, KeyRound
+  Lock, Mail, Phone, UserPlus, LogIn, Sparkles, ArrowRight, ShieldAlert,
+  CheckCircle2, Send, RefreshCw, KeyRound, Clock
 } from 'lucide-react';
 
 export default function LoginView() {
   const { loginUser, registerUser, switchRole } = useAuth();
   const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [authChannel, setAuthChannel] = useState('EMAIL'); // 'EMAIL' | 'PHONE'
   
   // Login Form State
   const [loginUsername, setLoginUsername] = useState('');
@@ -20,9 +21,10 @@ export default function LoginView() {
   const [regPassword, setRegPassword] = useState('');
   const [regFullName, setRegFullName] = useState('');
   const [regEmail, setRegEmail] = useState('');
+  const [regPhone, setRegPhone] = useState('+91');
   const [regRole, setRegRole] = useState('PATIENT');
 
-  // OTP Email Verification State
+  // OTP Verification & Cooldown State
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
@@ -30,24 +32,43 @@ export default function LoginView() {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpMessage, setOtpMessage] = useState(null);
 
-  const [error, setError] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  // 30-Second Resend Cooldown Timer
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef(null);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      cooldownRef.current = setTimeout(() => setCooldown(cooldown - 1), 1000);
+    } else {
+      clearTimeout(cooldownRef.current);
+    }
+    return () => clearTimeout(cooldownRef.current);
+  }, [cooldown]);
 
   const handleSendOTP = async () => {
-    if (!regEmail || !regEmail.includes('@')) {
-      setError('Please enter a valid email address first.');
-      return;
-    }
     setError(null);
     setOtpMessage(null);
+
+    const target = authChannel === 'PHONE' ? regPhone.trim() : regEmail.trim();
+    if (!target) {
+      setError(authChannel === 'PHONE' ? 'Please enter a valid phone number in E.164 format (+91...)' : 'Please enter a valid email address.');
+      return;
+    }
+
+    if (authChannel === 'PHONE' && !target.startsWith('+')) {
+      setError('Phone number must start with + and country code (e.g. +919876543210 for India).');
+      return;
+    }
+
     setOtpSending(true);
 
     try {
-      const res = await api.sendOTP(regEmail, regFullName || regUsername || 'User');
+      const res = await api.sendOTP(target, regFullName || regUsername || 'User', authChannel);
       setOtpSent(true);
       setOtpMessage(res.message);
+      setCooldown(30); // 30s resend cooldown timer
     } catch (err) {
-      setError(err.message || 'Failed to send OTP via Gmail SMTP.');
+      setError(err.message || 'Failed to send OTP. Please try again.');
     } finally {
       setOtpSending(false);
     }
@@ -55,17 +76,23 @@ export default function LoginView() {
 
   const handleVerifyOTP = async () => {
     if (!otpCode || otpCode.length < 5) {
-      setError('Please enter the 6-digit code sent to your email.');
+      setError('Please enter the 6-digit verification code.');
       return;
     }
     setError(null);
     setOtpMessage(null);
     setOtpVerifying(true);
 
+    const target = authChannel === 'PHONE' ? regPhone.trim() : regEmail.trim();
+
     try {
-      const res = await api.verifyOTP(regEmail, otpCode);
+      const res = await api.verifyOTP(target, otpCode, authChannel);
       setOtpVerified(true);
-      setOtpMessage('Email successfully verified via Gmail SMTP!');
+      setOtpMessage(res.message);
+      if (res.token) {
+        // If phone verification returned session token, trigger app refresh
+        window.location.reload();
+      }
     } catch (err) {
       setError(err.message || 'Verification code invalid or expired.');
     } finally {
@@ -91,7 +118,7 @@ export default function LoginView() {
     setError(null);
 
     if (!otpVerified) {
-      setError('Please verify your email address via Gmail SMTP OTP code first.');
+      setError(`Please verify your ${authChannel === 'PHONE' ? 'phone number via SMS' : 'email via Gmail SMTP'} OTP code first.`);
       return;
     }
 
@@ -101,7 +128,7 @@ export default function LoginView() {
         username: regUsername,
         password: regPassword,
         full_name: regFullName,
-        email: regEmail,
+        email: regEmail || `${regUsername}@companion.local`,
         role: regRole,
         otp_code: otpCode,
       });
@@ -143,8 +170,8 @@ export default function LoginView() {
               <div className="flex items-start space-x-3 bg-white/5 border border-white/10 p-3.5 rounded-2xl backdrop-blur-sm">
                 <ShieldCheck className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
                 <div className="text-xs text-slate-200">
-                  <strong className="block text-white font-semibold">Gmail SMTP Email Authentication</strong>
-                  Active verification via <code className="text-blue-300 font-mono">e.admin26@gmail.com</code> with App Password TLS authentication.
+                  <strong className="block text-white font-semibold">Dual Email & Phone OTP Auth</strong>
+                  Supports Gmail SMTP Email OTP and Twilio SMS Phone OTP with E.164 validation & 30s resend cooldown.
                 </div>
               </div>
 
@@ -159,8 +186,8 @@ export default function LoginView() {
           </div>
 
           <div className="relative z-10 mt-8 pt-4 border-t border-slate-700/60 text-xs text-slate-400 flex items-center justify-between">
-            <span>SMTP Verified Service</span>
-            <span className="text-blue-400 font-medium">FastAPI + Gmail SSL</span>
+            <span>Dual Auth System</span>
+            <span className="text-blue-400 font-medium">SMTP + Twilio SMS</span>
           </div>
         </div>
 
@@ -260,8 +287,10 @@ export default function LoginView() {
               </button>
             </form>
           ) : (
-            /* REGISTER FORM WITH GMAIL SMTP OTP VERIFICATION */
+            /* REGISTER FORM WITH DUAL EMAIL / PHONE OTP SELECTION */
             <form onSubmit={handleRegisterSubmit} className="space-y-3">
+              
+              {/* Account Role Selector */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Select Your Account Role
@@ -308,66 +337,133 @@ export default function LoginView() {
                 </div>
               </div>
 
+              {/* Full Name & Username */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Full Name & Username
-                </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    required
-                    value={regFullName}
-                    onChange={(e) => setRegFullName(e.target.value)}
-                    placeholder="Full name"
-                    className="w-full px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-900"
-                  />
-                  <input
-                    type="text"
-                    required
-                    value={regUsername}
-                    onChange={(e) => setRegUsername(e.target.value)}
-                    placeholder="Username"
-                    className="w-full px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-900"
-                  />
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={regFullName}
+                      onChange={(e) => setRegFullName(e.target.value)}
+                      placeholder="Full name"
+                      className="w-full px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Username</label>
+                    <input
+                      type="text"
+                      required
+                      value={regUsername}
+                      onChange={(e) => setRegUsername(e.target.value)}
+                      placeholder="Username"
+                      className="w-full px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-900"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Email Address & SMTP Send OTP Button */}
+              {/* Channel Option Selector (Email OTP vs Phone SMS OTP) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Email Address (Gmail SMTP Verification)
+                  Choose Verification Channel
+                </label>
+                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthChannel('EMAIL');
+                      setOtpSent(false);
+                      setOtpVerified(false);
+                      setError(null);
+                    }}
+                    className={`py-1.5 text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1.5 ${
+                      authChannel === 'EMAIL'
+                        ? 'bg-white text-blue-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>Gmail Email OTP</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthChannel('PHONE');
+                      setOtpSent(false);
+                      setOtpVerified(false);
+                      setError(null);
+                    }}
+                    className={`py-1.5 text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1.5 ${
+                      authChannel === 'PHONE'
+                        ? 'bg-white text-blue-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>SMS Phone OTP</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Target Input Field (Email or Phone Number) */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  {authChannel === 'PHONE' ? 'Phone Number (E.164 format: +91...)' : 'Email Address'}
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                    {authChannel === 'PHONE' ? (
+                      <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                    ) : (
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                    )}
                     <input
-                      type="email"
+                      type={authChannel === 'PHONE' ? 'tel' : 'email'}
                       required
                       disabled={otpVerified}
-                      value={regEmail}
+                      value={authChannel === 'PHONE' ? regPhone : regEmail}
                       onChange={(e) => {
-                        setRegEmail(e.target.value);
+                        if (authChannel === 'PHONE') {
+                          setRegPhone(e.target.value);
+                        } else {
+                          setRegEmail(e.target.value);
+                        }
                         setOtpSent(false);
                         setOtpVerified(false);
                       }}
-                      placeholder="name@example.com"
+                      placeholder={authChannel === 'PHONE' ? '+919876543210' : 'name@example.com'}
                       className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-900 disabled:opacity-60"
                     />
                   </div>
+
                   <button
                     type="button"
                     onClick={handleSendOTP}
-                    disabled={otpSending || otpVerified || !regEmail}
-                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 disabled:opacity-50 flex-shrink-0"
+                    disabled={otpSending || otpVerified || cooldown > 0}
+                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 disabled:opacity-50 flex-shrink-0 min-w-[110px] justify-center"
                   >
                     {otpSending ? (
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                     ) : otpVerified ? (
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : cooldown > 0 ? (
+                      <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                     ) : (
                       <Send className="w-3.5 h-3.5 text-blue-400" />
                     )}
-                    <span>{otpVerified ? 'Verified' : otpSent ? 'Resend OTP' : 'Send Gmail OTP'}</span>
+                    <span>
+                      {otpVerified
+                        ? 'Verified'
+                        : cooldown > 0
+                        ? `Wait ${cooldown}s`
+                        : otpSent
+                        ? 'Resend'
+                        : 'Send OTP'}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -375,10 +471,13 @@ export default function LoginView() {
               {/* Enter & Verify 6-digit OTP Code */}
               {otpSent && !otpVerified && (
                 <div className="bg-blue-50 border border-blue-200 p-3 rounded-2xl">
-                  <label className="block text-xs font-bold text-blue-950 uppercase tracking-wider mb-1 flex items-center gap-1">
-                    <KeyRound className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Enter 6-Digit Email Verification Code</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-blue-950 uppercase tracking-wider flex items-center gap-1">
+                      <KeyRound className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Enter 6-Digit Code</span>
+                    </label>
+                    <span className="text-[10px] text-blue-700 font-semibold">5-min expiry</span>
+                  </div>
                   <div className="flex gap-2">
                     <input
                       type="text"

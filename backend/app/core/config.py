@@ -22,6 +22,16 @@ SMTP_USERNAME = os.getenv("SMTP_USERNAME", "e.admin26@gmail.com")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "haucmgimtppmdnwz")
 SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "e.admin26@gmail.com")
 
+# Phone OTP & Twilio SMS Configuration
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "")
+
+# Phone OTP Rate Limits & Security Rules
+OTP_EXPIRY_SECONDS = 300       # 5 minutes
+MAX_OTP_ATTEMPTS = 5           # Max 5 tries before invalidating
+RESEND_COOLDOWN_SECONDS = 30   # 30-second cooldown between resend requests
+
 # Clinical Disclaimer text required on relevant outputs
 CLINICAL_SAFETY_DISCLAIMER = (
     "DISCLAIMER: Parkinson's Voice Companion is an experimental screening/monitoring support "

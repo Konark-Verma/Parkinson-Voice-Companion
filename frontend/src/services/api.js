@@ -68,18 +68,28 @@ export const api = {
     return data;
   },
 
-  async sendOTP(email, username) {
+  async sendOTP(target, username = 'User', channel = 'EMAIL') {
+    const payload = channel === 'PHONE'
+      ? { phone: target, username, channel: 'PHONE' }
+      : { email: target, username, channel: 'EMAIL' };
     return request('/auth/send-otp', {
       method: 'POST',
-      body: JSON.stringify({ email, username }),
+      body: JSON.stringify(payload),
     });
   },
 
-  async verifyOTP(email, otp_code) {
-    return request('/auth/verify-otp', {
+  async verifyOTP(target, otp_code, channel = 'EMAIL') {
+    const payload = channel === 'PHONE'
+      ? { phone: target, otp_code, channel: 'PHONE' }
+      : { email: target, otp_code, channel: 'EMAIL' };
+    const data = await request('/auth/verify-otp', {
       method: 'POST',
-      body: JSON.stringify({ email, otp_code }),
+      body: JSON.stringify(payload),
     });
+    if (data.token) {
+      setStoredToken(data.token);
+    }
+    return data;
   },
 
   async getMe() {
