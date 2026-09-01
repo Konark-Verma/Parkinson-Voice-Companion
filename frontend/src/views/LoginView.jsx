@@ -31,6 +31,8 @@ export default function LoginView() {
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpMessage, setOtpMessage] = useState(null);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // 30-Second Resend Cooldown Timer
   const [cooldown, setCooldown] = useState(0);
