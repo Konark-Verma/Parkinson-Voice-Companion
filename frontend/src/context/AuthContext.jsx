@@ -26,12 +26,12 @@ export function AuthProvider({ children }) {
           setUser(me);
           setActiveRole(me.role);
         } else {
-          // Default auto-login as Patient for instantaneous demo access
-          await switchRole('PATIENT');
+          setUser(null);
         }
       } catch (err) {
-        console.warn('Initial session restore failed, defaulting to patient demo:', err);
-        await switchRole('PATIENT');
+        console.warn('Initial session restore failed:', err);
+        removeStoredToken();
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -66,10 +66,6 @@ export function AuthProvider({ children }) {
               patientName: data.alert.patient_name,
               time: new Date().toLocaleTimeString(),
             });
-          } else if (data.event === 'VOICE_SAMPLE_CLASSIFIED') {
-            if (data.decline_alert_triggered) {
-              console.log('[WS] Decline alert triggered on voice sample classification');
-            }
           }
         } catch (e) {
           console.error('[WS] Parse error:', e);
@@ -89,6 +85,30 @@ export function AuthProvider({ children }) {
       if (socket) socket.close();
     };
   }, [user, activeRole]);
+
+  const loginUser = async (username, password) => {
+    setLoading(true);
+    try {
+      const res = await api.login(username, password);
+      setUser(res.user);
+      setActiveRole(res.user.role);
+      return res.user;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const registerUser = async (formData) => {
+    setLoading(true);
+    try {
+      const res = await api.register(formData);
+      setUser(res.user);
+      setActiveRole(res.user.role);
+      return res.user;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const switchRole = async (targetRole) => {
     setLoading(true);
@@ -117,6 +137,8 @@ export function AuthProvider({ children }) {
         user,
         activeRole,
         loading,
+        loginUser,
+        registerUser,
         switchRole,
         logout,
         activeToast,

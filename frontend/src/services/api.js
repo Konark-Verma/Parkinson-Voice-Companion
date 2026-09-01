@@ -57,6 +57,17 @@ export const api = {
     return data;
   },
 
+  async register(userData) {
+    const data = await request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+    if (data.access_token) {
+      setStoredToken(data.access_token);
+    }
+    return data;
+  },
+
   async getMe() {
     return request('/auth/me');
   },

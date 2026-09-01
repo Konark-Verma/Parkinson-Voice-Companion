@@ -7,6 +7,13 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+class UserRegister(BaseModel):
+    username: str
+    password: str
+    full_name: str
+    email: str
+    role: str = "PATIENT"
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

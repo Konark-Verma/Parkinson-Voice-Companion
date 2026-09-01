@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Activity, User, HeartHandshake, Stethoscope, Bell } from 'lucide-react';
 
 export default function Header() {
-  const { user, activeRole, switchRole, activeToast, dismissToast } = useAuth();
+  const { user, activeRole, switchRole, logout, activeToast, dismissToast } = useAuth();
 
   const roles = [
     { id: 'PATIENT', label: 'Patient View', icon: User, desc: 'Large-touch & Voice' },
@@ -34,33 +34,55 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Role Switcher Toolbar */}
-        <div className="flex items-center justify-between md:justify-end gap-2 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 hidden lg:inline">
-            Active Role:
-          </span>
-          <div className="flex space-x-1">
-            {roles.map((r) => {
-              const Icon = r.icon;
-              const isActive = activeRole === r.id;
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => switchRole(r.id)}
-                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-150 min-h-[44px] ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-                  }`}
-                  aria-pressed={isActive}
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span>{r.label}</span>
-                </button>
-              );
-            })}
+        {/* Role Switcher & User Profile Toolbar */}
+        {user ? (
+          <div className="flex flex-wrap items-center justify-between md:justify-end gap-2">
+            <div className="flex items-center space-x-2 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 hidden lg:inline">
+                Active Role:
+              </span>
+              <div className="flex space-x-1">
+                {roles.map((r) => {
+                  const Icon = r.icon;
+                  const isActive = activeRole === r.id;
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={() => switchRole(r.id)}
+                      className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-150 min-h-[44px] ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+                      }`}
+                      aria-pressed={isActive}
+                    >
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <span>{r.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
+              <div className="text-right hidden sm:block">
+                <p className="text-xs font-bold text-slate-200">{user.full_name || user.username}</p>
+                <p className="text-[10px] text-blue-400 font-semibold uppercase">{user.role}</p>
+              </div>
+              <button
+                onClick={logout}
+                className="px-3 py-2 bg-slate-800 hover:bg-red-600/90 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition border border-slate-700 hover:border-red-500 flex items-center space-x-1"
+                title="Sign out of account"
+              >
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-xs text-slate-400 font-medium bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-700">
+            Sign in or Register to access Companion
+          </div>
+        )}
       </div>
 
       {/* Real-Time Alert Toast Notification Banner */}

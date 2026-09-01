@@ -6,8 +6,10 @@ import CaregiverView from './views/CaregiverView';
 import DoctorView from './views/DoctorView';
 import { ShieldAlert, Activity, HeartHandshake, Stethoscope } from 'lucide-react';
 
+import LoginView from './views/LoginView';
+
 export default function App() {
-  const { activeRole, loading } = useAuth();
+  const { user, activeRole, loading } = useAuth();
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-blue-600 selection:text-white">
@@ -23,6 +25,8 @@ export default function App() {
               </p>
             </div>
           </div>
+        ) : !user ? (
+          <LoginView />
         ) : (
           <>
             {activeRole === 'PATIENT' && <PatientView />}
