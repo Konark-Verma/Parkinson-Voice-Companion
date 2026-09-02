@@ -6,7 +6,7 @@ import AlertsList from '../components/AlertsList';
 import {
   Stethoscope, Users, LineChart as ChartIcon, Pill,
   Award, Bell, Plus, Edit2, CheckCircle2, AlertTriangle,
-  TrendingUp, RefreshCw, Calendar, ChevronRight
+  TrendingUp, RefreshCw, Calendar, ChevronRight, Download
 } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis,
@@ -134,43 +134,59 @@ export default function DoctorView() {
           </div>
         )}
       </div>
-
-      {/* Patient Selector Strip */}
-      <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header controls & Patient selector */}
+      <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <Users className="w-5 h-5 text-blue-600 flex-shrink-0" />
+          <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700">
+            <Stethoscope className="w-6 h-6" />
+          </div>
           <div>
-            <span className="text-xs text-slate-500 font-semibold block">Select Clinical Patient:</span>
-            <select
-              value={selectedPatientId}
-              onChange={(e) => setSelectedPatientId(Number(e.target.value))}
-              className="mt-0.5 text-base font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-600"
-            >
-              {patients.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} (DOB: {p.date_of_birth || '1955'} • Dx: {p.diagnosis_year || '2021'})
-                </option>
-              ))}
-            </select>
+            <h2 className="text-xl font-bold text-slate-900">Neurologist Longitudinal Dashboard</h2>
+            <div className="flex items-center space-x-2 text-xs text-slate-500 mt-0.5">
+              <span>Selecting Patient:</span>
+              <select
+                value={selectedPatientId}
+                onChange={(e) => setSelectedPatientId(Number(e.target.value))}
+                className="bg-slate-100 font-bold text-slate-900 px-2.5 py-1 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                {patients.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} (DOB: {p.date_of_birth || '1955'} • Dx: {p.diagnosis_year || '2021'})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Time range switcher */}
-        <div className="flex items-center space-x-2">
-          <span className="text-xs font-semibold text-slate-500 uppercase">Trend Window:</span>
-          {[30, 60, 90].map((days) => (
-            <button
-              key={days}
-              onClick={() => setTimeRangeDays(days)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                timeRangeDays === days
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {days} Days
-            </button>
-          ))}
+        {/* Time range switcher & Export CSV Button */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl">
+            <span className="text-xs font-semibold text-slate-500 uppercase px-2">Window:</span>
+            {[14, 30, 60, 90].map((days) => (
+              <button
+                key={days}
+                onClick={() => setTimeRangeDays(days)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                  timeRangeDays === days
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {days}d
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleExportCSV}
+            disabled={!dashboardData}
+            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center space-x-1.5 disabled:opacity-50"
+            title="Download 90-day clinical trajectory CSV report"
+          >
+            <Download className="w-4 h-4 text-teal-400" />
+            <span>Export CSV Report</span>
+          </button>
         </div>
       </div>
 
