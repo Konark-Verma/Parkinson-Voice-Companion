@@ -11,19 +11,20 @@ class UserRegister(BaseModel):
     username: str
     password: str
     full_name: str
-    email: str
+    email: Optional[str] = Field(default=None)
+    phone_number: Optional[str] = Field(default=None)
     role: str = "PATIENT"
     otp_code: Optional[str] = None
 
 class SendOTPRequest(BaseModel):
-    email: Optional[str] = None
-    phone: Optional[str] = None
+    email: Optional[str] = Field(default=None)
+    phone: Optional[str] = Field(default=None)
     channel: str = "EMAIL"  # "EMAIL" or "PHONE"
     username: Optional[str] = "User"
 
 class VerifyOTPRequest(BaseModel):
-    email: Optional[str] = None
-    phone: Optional[str] = None
+    email: Optional[str] = Field(default=None)
+    phone: Optional[str] = Field(default=None)
     channel: str = "EMAIL"  # "EMAIL" or "PHONE"
     otp_code: str
 
@@ -31,6 +32,26 @@ class OTPResponse(BaseModel):
     success: bool
     message: str
     token: Optional[str] = None  # Returned on successful phone login if account exists
+
+class UsernameCheckRequest(BaseModel):
+    username: str
+
+class UsernameCheckResponse(BaseModel):
+    available: bool
+    suggestions: List[str] = []
+    message: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    reset_token: str
+    new_password: str
+
+class LoginOTPRequest(BaseModel):
+    target: str  # email address or phone number
+    channel: str = "EMAIL"  # "EMAIL" or "PHONE"
 
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

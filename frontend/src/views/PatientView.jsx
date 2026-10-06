@@ -54,37 +54,37 @@ export default function PatientView() {
       {/* Prominent Clinical Disclaimer */}
       <ClinicalDisclaimer />
 
-      {/* Welcome & Patient Status Bar */}
-      <div className="bg-gradient-to-r from-blue-900 to-slate-900 text-white rounded-2xl p-6 shadow-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Welcome & Patient Status Bar (Canva Medical Style) */}
+      <div className="bg-gradient-to-r from-[#125450] via-[#1B7B75] to-[#146E68] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-[#2DD4BF]/30">
         <div>
-          <span className="text-xs uppercase tracking-wider text-blue-300 font-semibold">
-            Patient Companion Dashboard
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-0.5">
+          <div className="inline-flex items-center space-x-2 bg-[#2DD4BF] text-[#125450] px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider mb-1">
+            <span>Patient Companion Dashboard</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-white mt-1">
             Hello, {user?.full_name || 'Robert Jenkins'}
           </h2>
-          <p className="text-sm text-slate-300 mt-1">
-            Tap any large action below to record your voice, do your loud speech exercise, or log medication.
+          <p className="text-xs sm:text-sm text-[#C6F6F2] font-semibold mt-1 max-w-xl">
+            Tap any large action below to record your voice, do your loud speech exercise, or log medication intake.
           </p>
         </div>
 
         {/* Quick Voice Risk Summary Badge */}
         {recentSamples.length > 0 && recentSamples[0].classification && (
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 p-3.5 rounded-xl text-center min-w-[150px]">
-            <span className="text-[11px] text-blue-200 uppercase font-semibold block">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl text-center min-w-[160px] shadow-inner">
+            <span className="text-[11px] text-[#2DD4BF] uppercase font-black tracking-wider block">
               Latest Risk Indicator
             </span>
-            <div className="text-2xl font-black text-white mt-0.5">
+            <div className="text-3xl font-black text-white mt-0.5">
               {(recentSamples[0].classification.risk_score * 100).toFixed(1)}%
             </div>
-            <span className="text-xs text-blue-100 font-medium">
+            <span className="text-xs text-[#C6F6F2] font-bold">
               {recentSamples[0].classification.severity_level}
             </span>
           </div>
         )}
       </div>
 
-      {/* Large-Touch Accessible Navigation Bar (≤2 Taps Core Flow) */}
+      {/* Large-Touch Accessible Navigation Bar (Canva Mint Pills) */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
         {navButtons.map((btn) => {
           const Icon = btn.icon;
@@ -93,19 +93,19 @@ export default function PatientView() {
             <button
               key={btn.id}
               onClick={() => setActiveTab(btn.id)}
-              className={`p-3.5 sm:p-4 rounded-xl flex flex-col items-center justify-center text-center font-bold transition-all shadow-sm min-h-[72px] relative ${
+              className={`p-3.5 sm:p-4 rounded-2xl flex flex-col items-center justify-center text-center font-extrabold transition-all min-h-[72px] relative ${
                 isSelected
-                  ? 'bg-blue-600 text-white ring-4 ring-blue-300 scale-102 shadow-lg shadow-blue-600/30'
-                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-[#1B7B75] text-white ring-4 ring-[#2DD4BF]/50 scale-102 shadow-lg shadow-[#1B7B75]/30'
+                  : 'bg-white text-slate-700 hover:bg-[#E6F7F5] border border-[#D5D2C7]'
               }`}
               aria-pressed={isSelected}
             >
               {btn.badge > 0 && (
-                <span className="absolute top-1.5 right-2 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full font-extrabold animate-pulse">
+                <span className="absolute top-1.5 right-2 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-black animate-pulse shadow-sm">
                   {btn.badge}
                 </span>
               )}
-              <Icon className={`w-6 h-6 mb-1 ${isSelected ? 'text-white' : 'text-blue-600'}`} />
+              <Icon className={`w-6 h-6 mb-1 ${isSelected ? 'text-[#2DD4BF]' : 'text-[#1B7B75]'}`} />
               <span className="text-xs sm:text-sm leading-tight">{btn.label}</span>
             </button>
           );

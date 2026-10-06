@@ -151,16 +151,16 @@ export default function CaregiverView() {
       )}
 
       {/* Caregiver Header Shell & Patient Selector */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-indigo-950 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="bg-gradient-to-r from-[#125450] via-[#1B7B75] to-[#125450] text-white rounded-2xl p-6 shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-6 border border-[#2DD4BF]/20">
         <div>
-          <span className="text-xs uppercase tracking-wider text-indigo-300 font-semibold flex items-center gap-1.5">
-            <HeartHandshake className="w-4 h-4 text-indigo-400" />
+          <span className="text-xs uppercase tracking-wider text-[#2DD4BF] font-extrabold flex items-center gap-1.5 bg-[#0D3F3C] px-3 py-1 rounded-full w-fit">
+            <HeartHandshake className="w-4 h-4 text-[#2DD4BF]" />
             Caregiver Companion Portal
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
             Welcome, {user?.full_name || 'Sarah Jenkins'}
           </h2>
-          <p className="text-sm text-slate-300 mt-1">
+          <p className="text-sm text-[#99E6DF] mt-1">
             Primary Caregiver • Linked Patient Access Only
           </p>
         </div>

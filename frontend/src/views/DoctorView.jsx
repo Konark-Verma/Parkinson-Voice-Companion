@@ -90,6 +90,57 @@ export default function DoctorView() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (!dashboardData || !dashboardData.trend_90d) return;
+
+    const patientName = dashboardData.patient?.name || `Patient_${selectedPatientId}`;
+    const headers = [
+      'Date',
+      'Time',
+      'Risk_Score_Pct',
+      'Severity_Level',
+      'HNR_dB',
+      'Jitter_Pct',
+      'Shimmer_Pct',
+      'Pre_Dose_Dip_Detected',
+      'Medication_Dose_Taken',
+      'Medication_Name'
+    ];
+
+    const rows = dashboardData.trend_90d.map((row) => [
+      row.date || '',
+      row.time || '',
+      (row.risk_score ? (row.risk_score * 100).toFixed(1) : '0.0'),
+      row.severity_level || 'HEALTHY',
+      row.hnr ? row.hnr.toFixed(2) : '',
+      row.jitter ? (row.jitter * 100).toFixed(2) : '',
+      row.shimmer ? (row.shimmer * 100).toFixed(2) : '',
+      row.is_pre_dose_dip ? 'YES' : 'NO',
+      row.medication_taken ? 'YES' : 'NO',
+      `"${row.medication_name || ''}"`
+    ]);
+
+    const csvContent = [
+      `# Parkinson Voice Companion - Clinical Trajectory Report`,
+      `# Patient: ${patientName}`,
+      `# Date Range: Last ${timeRangeDays} Days`,
+      `# Export Date: ${new Date().toISOString().split('T')[0]}`,
+      ``,
+      headers.join(','),
+      ...rows.map((r) => r.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${patientName.replace(/\s+/g, '_')}_${timeRangeDays}d_Clinical_Report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Custom Dot renderer for Recharts to highlight Pre-Dose Wearing-Off Dips
   const renderCustomDot = (props) => {
     const { cx, cy, payload } = props;
@@ -137,17 +188,17 @@ export default function DoctorView() {
       {/* Header controls & Patient selector */}
       <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700">
-            <Stethoscope className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-[#E6F7F5] flex items-center justify-center text-[#125450] shadow-sm">
+            <Stethoscope className="w-6 h-6 text-[#1B7B75]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Neurologist Longitudinal Dashboard</h2>
+            <h2 className="text-xl font-extrabold text-[#1C2526]">Neurologist Longitudinal Dashboard</h2>
             <div className="flex items-center space-x-2 text-xs text-slate-500 mt-0.5">
-              <span>Selecting Patient:</span>
+              <span className="font-semibold">Selecting Patient:</span>
               <select
                 value={selectedPatientId}
                 onChange={(e) => setSelectedPatientId(Number(e.target.value))}
-                className="bg-slate-100 font-bold text-slate-900 px-2.5 py-1 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="bg-[#E6F7F5] font-extrabold text-[#125450] px-3 py-1.5 rounded-xl border border-[#2DD4BF]/40 focus:outline-none focus:ring-2 focus:ring-[#1B7B75]"
               >
                 {patients.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -161,15 +212,15 @@ export default function DoctorView() {
 
         {/* Time range switcher & Export CSV Button */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl">
+          <div className="flex items-center space-x-1.5 bg-slate-100 p-1.5 rounded-xl">
             <span className="text-xs font-semibold text-slate-500 uppercase px-2">Window:</span>
             {[14, 30, 60, 90].map((days) => (
               <button
                 key={days}
                 onClick={() => setTimeRangeDays(days)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
                   timeRangeDays === days
-                    ? 'bg-blue-600 text-white shadow-sm'
+                    ? 'bg-[#125450] text-[#2DD4BF] shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -181,10 +232,10 @@ export default function DoctorView() {
           <button
             onClick={handleExportCSV}
             disabled={!dashboardData}
-            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center space-x-1.5 disabled:opacity-50"
+            className="px-4 py-2 bg-[#125450] hover:bg-[#0D3F3C] text-white rounded-xl text-xs font-extrabold transition shadow-sm flex items-center space-x-2 disabled:opacity-50"
             title="Download 90-day clinical trajectory CSV report"
           >
-            <Download className="w-4 h-4 text-teal-400" />
+            <Download className="w-4 h-4 text-[#2DD4BF]" />
             <span>Export CSV Report</span>
           </button>
         </div>

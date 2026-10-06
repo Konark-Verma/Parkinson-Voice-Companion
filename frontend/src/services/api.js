@@ -70,8 +70,8 @@ export const api = {
 
   async sendOTP(target, username = 'User', channel = 'EMAIL') {
     const payload = channel === 'PHONE'
-      ? { phone: target, username, channel: 'PHONE' }
-      : { email: target, username, channel: 'EMAIL' };
+      ? { phone: target, email: null, username, channel: 'PHONE' }
+      : { email: target, phone: null, username, channel: 'EMAIL' };
     return request('/auth/send-otp', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -80,14 +80,56 @@ export const api = {
 
   async verifyOTP(target, otp_code, channel = 'EMAIL') {
     const payload = channel === 'PHONE'
-      ? { phone: target, otp_code, channel: 'PHONE' }
-      : { email: target, otp_code, channel: 'EMAIL' };
+      ? { phone: target, email: null, otp_code, channel: 'PHONE' }
+      : { email: target, phone: null, otp_code, channel: 'EMAIL' };
     const data = await request('/auth/verify-otp', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
     if (data.token) {
       setStoredToken(data.token);
+    }
+    return data;
+  },
+
+  async checkUsername(username) {
+    return request('/auth/check-username', {
+      method: 'POST',
+      body: JSON.stringify({ username }),
+    });
+  },
+
+  async forgotPassword(email) {
+    return request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  async resetPassword(email, reset_token, new_password) {
+    return request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, reset_token, new_password }),
+    });
+  },
+
+  async sendLoginOTP(target, channel = 'EMAIL') {
+    return request('/auth/login-otp-request', {
+      method: 'POST',
+      body: JSON.stringify({ target, channel }),
+    });
+  },
+
+  async verifyLoginOTP(target, otp_code, channel = 'EMAIL') {
+    const payload = channel === 'PHONE'
+      ? { phone: target, email: null, otp_code, channel: 'PHONE' }
+      : { email: target, phone: null, otp_code, channel: 'EMAIL' };
+    const data = await request('/auth/login-otp-verify', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (data.access_token) {
+      setStoredToken(data.access_token);
     }
     return data;
   },

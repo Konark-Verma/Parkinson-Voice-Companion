@@ -6,15 +6,30 @@ from backend.app.core import config
 
 logger = logging.getLogger("sms_service")
 
-# E.164 International Phone Number Regex Pattern (e.g., +919876543210, +14155552671)
-E164_PHONE_REGEX = re.compile(r"^\+[1-9]\d{1,14}$")
+# E.164 International Phone Number Regex Pattern (e.g., +919876543210, +14155552671: 7 to 15 digits total)
+E164_PHONE_REGEX = re.compile(r"^\+[1-9]\d{6,14}$")
+
+def format_e164_phone(phone_number: str) -> str:
+    """Formats phone number into standard E.164 international format (+91 for 10-digit India numbers)."""
+    if not phone_number or not isinstance(phone_number, str):
+        return ""
+    clean = re.sub(r"[^\d+]", "", phone_number.strip())
+    if not clean:
+        return ""
+    if not clean.startswith("+"):
+        if len(clean) == 10:
+            clean = "+91" + clean
+        elif len(clean) == 11 and clean.startswith("0"):
+            clean = "+91" + clean[1:]
+        else:
+            clean = "+" + clean
+    return clean
 
 def validate_e164_phone(phone_number: str) -> bool:
-    """Validates international E.164 phone number format."""
+    """Validates international E.164 phone number format directly."""
     if not phone_number or not isinstance(phone_number, str):
         return False
-    clean_phone = phone_number.strip().replace(" ", "").replace("-", "")
-    return bool(E164_PHONE_REGEX.match(clean_phone))
+    return bool(E164_PHONE_REGEX.match(phone_number.strip()))
 
 def _send_twilio_sms_sync(to_phone: str, message_body: str) -> bool:
     """Synchronous Twilio SMS dispatcher with dev fallback."""

@@ -1,17 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #F4F3EF;
+    color: #1C2526;
   }
 }
 
-/* Accessibility high-contrast focus rings and tap indicators */
+/* Accessibility high-contrast focus rings */
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
-  outline: 3px solid #1E3A8A;
+  outline: 3px solid #1B7B75;
   outline-offset: 2px;
+}
+
+/* Canva Medical Signature Pill Card */
+.canva-pill-card {
+  background: linear-gradient(135deg, #38B2AC 0%, #2DD4BF 100%);
+  border-radius: 0 50px 50px 0;
+  box-shadow: 0 10px 25px -5px rgba(27, 123, 117, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.canva-pill-card:hover {
+  transform: translateX(6px);
+  box-shadow: 0 14px 30px -5px rgba(27, 123, 117, 0.25);
+}
+
+.canva-pill-full {
+  background: linear-gradient(135deg, #38B2AC 0%, #2DD4BF 100%);
+  border-radius: 50px;
+  box-shadow: 0 8px 20px -4px rgba(27, 123, 117, 0.15);
 }
 
 /* Pulse animation for voice recording */
