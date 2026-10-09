@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, Square, CheckCircle2, AlertTriangle, RefreshCw, Volume2, Activity, Play, Sparkles } from 'lucide-react';
+import { Mic, Square, CheckCircle2, AlertTriangle, RefreshCw, Volume2, Activity, Play, Sparkles, Upload, FileAudio } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function VoiceRecorder({ patientId, onSampleClassified }) {
@@ -15,6 +15,7 @@ export default function VoiceRecorder({ patientId, onSampleClassified }) {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     return () => {
@@ -113,6 +114,39 @@ export default function VoiceRecorder({ patientId, onSampleClassified }) {
       setErrorMessage(msg);
       setErrorState({ isNetwork: isNet, message: msg });
     } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    setErrorMessage(null);
+    setResult(null);
+    setAudioBlob(file);
+    const url = URL.createObjectURL(file);
+    setAudioUrl(url);
+
+    await uploadAndClassify(file);
+  };
+
+  const importPresetVoiceNote = async (filename) => {
+    setProcessing(true);
+    setErrorMessage(null);
+    setResult(null);
+    try {
+      const response = await fetch(`/${filename}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      setAudioBlob(blob);
+      const url = URL.createObjectURL(blob);
+      setAudioUrl(url);
+      await uploadAndClassify(blob);
+    } catch (err) {
+      setErrorMessage(`Failed to load preset voice note: ${err.message}`);
       setProcessing(false);
     }
   };
@@ -273,19 +307,61 @@ export default function VoiceRecorder({ patientId, onSampleClassified }) {
           </button>
         )}
 
-        <div className="mt-4 text-xs text-slate-400">
-          Tip: Speak steadily into your microphone at normal volume for at least 3 seconds.
-        </div>
+        {/* Hidden File Input for Audio File Import */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="audio/*,.wav,.mp3,.ogg,.webm"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
 
-        {/* Quick Demo Synthesizer Button */}
-        <button
-          onClick={generateSyntheticSample}
-          disabled={processing || recording}
-          className="mt-3 text-xs text-slate-500 hover:text-blue-600 underline flex items-center gap-1"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          Test with standard benchmark voice sample
-        </button>
+        <div className="mt-4 flex flex-col items-center gap-3 w-full max-w-md">
+          <div className="flex items-center gap-2 w-full">
+            <div className="flex-1 h-px bg-slate-200"></div>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">OR Import Audio File</span>
+            <div className="flex-1 h-px bg-slate-200"></div>
+          </div>
+
+          {/* Explicit File Import Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current && fileInputRef.current.click()}
+            disabled={processing || recording}
+            className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-semibold rounded-xl text-sm flex items-center justify-center gap-2 transition shadow-sm hover:shadow"
+          >
+            <Upload className="w-4 h-4 text-blue-600" />
+            <span>Select & Import Audio File (.wav, .mp3)</span>
+          </button>
+
+          {/* Quick Demo Presets: 2 Voice Notes */}
+          <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-left">
+            <span className="text-xs font-bold text-slate-600 block mb-2 flex items-center gap-1.5">
+              <FileAudio className="w-3.5 h-3.5 text-blue-600" />
+              Quick Demo Voice Notes (Pre-loaded):
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => importPresetVoiceNote('healthy_control_sample.wav')}
+                disabled={processing || recording}
+                className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-lg text-xs font-bold text-left transition flex items-center gap-1.5"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                <span>Import Healthy Control (Low Risk)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => importPresetVoiceNote('parkinsons_patient_sample.wav')}
+                disabled={processing || recording}
+                className="px-3 py-2 bg-red-50 hover:bg-red-100 border border-red-300 text-red-800 rounded-lg text-xs font-bold text-left transition flex items-center gap-1.5"
+              >
+                <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-ping"></span>
+                <span>Import Parkinson&apos;s Sample (High Risk)</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Rejection / Connection Error Prompt */}
